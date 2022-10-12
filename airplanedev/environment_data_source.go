@@ -113,6 +113,10 @@ func (d *environmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 	// Retrieve values from config
 	var slug string
 	diags := req.Config.GetAttribute(ctx, path.Root("slug"), &slug)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	env, err := d.client.GetEnv(ctx, slug)
 	if err != nil {
 		resp.Diagnostics.AddError(
