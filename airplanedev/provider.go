@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/airplanedev/cli/pkg/api"
 )
 
 // Ensure the implementation satisfies the expected interfaces
@@ -28,9 +30,9 @@ type airplanedevProvider struct{}
 
 // airplanedevProviderModel maps provider schema data to a Go type.
 type airplanedevProviderModel struct {
-	Host     types.String `tfsdk:"host"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
+	Host   types.String `tfsdk:"host"`
+	APIKey types.String `tfsdk:"api_key"`
+	TeamID types.String `tfsdk:"team_id"`
 }
 
 // Metadata returns the provider type name.
@@ -46,11 +48,12 @@ func (p *airplanedevProvider) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"username": {
-				Type:     types.StringType,
-				Optional: true,
+			"api_key": {
+				Type:      types.StringType,
+				Optional:  true,
+				Sensitive: true,
 			},
-			"password": {
+			"team_id": {
 				Type:      types.StringType,
 				Optional:  true,
 				Sensitive: true,
@@ -74,27 +77,27 @@ func (p *airplanedevProvider) Configure(ctx context.Context, req provider.Config
 	if config.Host.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),
-			"Unknown Airplanedev API Host",
-			"The provider cannot create the Airplanedev API client as there is an unknown configuration value for the Airplanedev API host. "+
+			"Unknown Airplanedev API Host (host)",
+			"The provider cannot create the Airplanedev API client as there is an unknown configuration value for the Airplanedev API Host. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the AIRPLANEDEV_HOST environment variable.",
 		)
 	}
 
-	if config.Username.IsUnknown() {
+	if config.APIKey.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("username"),
-			"Unknown Airplanedev API Username",
-			"The provider cannot create the Airplanedev API client as there is an unknown configuration value for the Airplanedev API username. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the AIRPLANEDEV_USERNAME environment variable.",
+			path.Root("api_key"),
+			"Unknown Airplanedev APIKey (api_key)",
+			"The provider cannot create the Airplanedev API client as there is an unknown configuration value for the Airplanedev APIKey. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the AIRPLANEDEV_APIKEY environment variable.",
 		)
 	}
 
-	if config.Password.IsUnknown() {
+	if config.TeamID.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Unknown Airplanedev API Password",
-			"The provider cannot create the Airplanedev API client as there is an unknown configuration value for the Airplanedev API password. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the AIRPLANEDEV_PASSWORD environment variable.",
+			path.Root("team_id"),
+			"Unknown Airplanedev TeamID (team_id)",
+			"The provider cannot create the Airplanedev API client as there is an unknown configuration value for the Airplanedev TeamID. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the AIRPLANEDEV_TEAMID environment variable.",
 		)
 	}
 
@@ -106,50 +109,40 @@ func (p *airplanedevProvider) Configure(ctx context.Context, req provider.Config
 	// with Terraform configuration value if set.
 
 	host := os.Getenv("AIRPLANEDEV_HOST")
-	username := os.Getenv("AIRPLANEDEV_USERNAME")
-	password := os.Getenv("AIRPLANEDEV_PASSWORD")
+	apiKey := os.Getenv("AIRPLANEDEV_APIKEY")
+	teamID := os.Getenv("AIRPLANEDEV_TEAMID")
 
 	if !config.Host.IsNull() {
 		host = config.Host.Value
 	}
 
-	if !config.Username.IsNull() {
-		username = config.Username.Value
+	if !config.APIKey.IsNull() {
+		apiKey = config.APIKey.Value
 	}
 
-	if !config.Password.IsNull() {
-		password = config.Password.Value
+	if !config.TeamID.IsNull() {
+		teamID = config.TeamID.Value
 	}
 
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
 
-	if host == "" {
+	if apiKey == "" {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("host"),
-			"Missing Airplanedev API Host",
-			"The provider cannot create the Airplanedev API client as there is a missing or empty value for the Airplanedev API host. "+
-				"Set the host value in the configuration or use the AIRPLANEDEV_HOST environment variable. "+
+			path.Root("api_key"),
+			"Missing Airplanedev APIKey (api_key)",
+			"The provider cannot create the Airplanedev API client as there is a missing or empty value for the Airplanedev APIKey. "+
+				"Set the api_key value in the configuration or use the AIRPLANEDEV_APIKEY environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
 
-	if username == "" {
+	if teamID == "" {
 		resp.Diagnostics.AddAttributeError(
-			path.Root("username"),
-			"Missing Airplanedev API Username",
-			"The provider cannot create the Airplanedev API client as there is a missing or empty value for the Airplanedev API username. "+
-				"Set the username value in the configuration or use the AIRPLANEDEV_USERNAME environment variable. "+
-				"If either is already set, ensure the value is not empty.",
-		)
-	}
-
-	if password == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Missing Airplanedev API Password",
-			"The provider cannot create the Airplanedev API client as there is a missing or empty value for the Airplanedev API password. "+
-				"Set the password value in the configuration or use the AIRPLANEDEV_PASSWORD environment variable. "+
+			path.Root("team_id"),
+			"Missing Airplanedev TeamID (team_id)",
+			"The provider cannot create the Airplanedev API client as there is a missing or empty value for the Airplanedev TeamID. "+
+				"Set the team_id value in the configuration or use the AIRPLANEDEV_TEAMID environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -159,16 +152,10 @@ func (p *airplanedevProvider) Configure(ctx context.Context, req provider.Config
 	}
 
 	// Create a new Airplanedev client using the configuration values
-	client, err := airplanedev.NewClient(&host, &username, &password)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Airplanedev API Client",
-			"An unexpected error occurred when creating the Airplanedev API client. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Airplanedev Client Error: "+err.Error(),
-		)
-		return
-	}
+	client := &api.Client{
+		Host:   host,
+		APIKey: apiKey,
+		TeamID: teamID}
 
 	// Make the Airplanedev client available during DataSource and Resource
 	// type Configure methods.
@@ -178,7 +165,9 @@ func (p *airplanedevProvider) Configure(ctx context.Context, req provider.Config
 
 // DataSources defines the data sources implemented in the provider.
 func (p *airplanedevProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewEnvironmentDataSource,
+	}
 }
 
 // Resources defines the resources implemented in the provider.
