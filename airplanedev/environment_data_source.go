@@ -57,50 +57,62 @@ func (d *environmentDataSource) Metadata(_ context.Context, req datasource.Metad
 // GetSchema defines the schema for the data source.
 func (d *environmentDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		Description: "Returns data about an existing environment given the environment slug.",
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "Identifier for the environment.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"slug": {
-				Type:     types.StringType,
-				Required: true,
+				Description: "The unique slug for the environment.",
+				Type:        types.StringType,
+				Required:    true,
 			},
 			"name": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "The dispay name for the environment.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"team_id": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "Identifier for the team (account).",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"default": {
-				Type:     types.BoolType,
-				Computed: true,
+				Description: "Whether the environment is the default environment.",
+				Type:        types.BoolType,
+				Computed:    true,
 			},
 			"created_at": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "Text timestamp for when the environment was created.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"created_by": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "Identifier for the user that created the environment.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"updated_at": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "Text timestamp for when the environment was last updated.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"updated_by": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "Identifier for the user that last updated the environment.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 			"is_archived": {
-				Type:     types.BoolType,
-				Computed: true,
+				Description: "Whether the environment is archived or not.",
+				Type:        types.BoolType,
+				Computed:    true,
 			},
 			"archived_at": {
-				Type:     types.StringType,
-				Computed: true,
+				Description: "If archived, text timestamp for when the environment was archived, otherwise nil.",
+				Type:        types.StringType,
+				Computed:    true,
 			},
 		},
 	}, nil

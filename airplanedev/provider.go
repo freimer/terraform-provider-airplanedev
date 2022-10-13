@@ -43,20 +43,24 @@ func (p *airplanedevProvider) Metadata(_ context.Context, _ provider.MetadataReq
 // GetSchema defines the provider-level schema for configuration data.
 func (p *airplanedevProvider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		Description: "Provision Airplane.dev resources.",
 		Attributes: map[string]tfsdk.Attribute{
 			"host": {
-				Type:     types.StringType,
-				Optional: true,
+				Description: "API Host for Airplane.dev.  May also be provided via AIRPLANEDEV_HOST environment variable.  If not specified the provider will use the standard API host for Airplane.dev.",
+				Type:        types.StringType,
+				Optional:    true,
 			},
 			"api_key": {
-				Type:      types.StringType,
-				Optional:  true,
-				Sensitive: true,
+				Description: "API Key for Airplane.dev.  May also be provided via AIRPLANEDEV_APIKEY environment variable.",
+				Type:        types.StringType,
+				Optional:    true,
+				Sensitive:   true,
 			},
 			"team_id": {
-				Type:      types.StringType,
-				Optional:  true,
-				Sensitive: true,
+				Description: "Team ID for Airplane.dev.  May also be provided via AIRPLANEDEV_TEAMID environment variable.",
+				Type:        types.StringType,
+				Optional:    true,
+				Sensitive:   true,
 			},
 		},
 	}, nil

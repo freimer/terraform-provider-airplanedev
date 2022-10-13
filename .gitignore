@@ -17,7 +17,7 @@
 .DS_Store
 vendor
 
-terraform-provider-hashicups
+terraform-provider-airplanedev
 bin
 
 # Local .terraform directories
