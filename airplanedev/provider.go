@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/airplanedev/cli/pkg/api"
 )
@@ -67,6 +68,7 @@ func (p *airplanedevProvider) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 }
 
 func (p *airplanedevProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Configuring Airplane.dev client")
 	// Retrieve provider data from configuration
 	var config airplanedevProviderModel
 	diags := req.Config.Get(ctx, &config)
@@ -154,7 +156,12 @@ func (p *airplanedevProvider) Configure(ctx context.Context, req provider.Config
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	ctx = tflog.SetField(ctx, "airplanedev_host", host)
+	ctx = tflog.SetField(ctx, "airplanedev_api_key", apiKey)
+	ctx = tflog.SetField(ctx, "airplanedev_team_id", teamID)
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "airplanedev_api_key")
 
+	tflog.Debug(ctx, "Creating Airplane.dev client")
 	// Create a new Airplanedev client using the configuration values
 	client := &api.Client{
 		Host:   host,
@@ -165,6 +172,8 @@ func (p *airplanedevProvider) Configure(ctx context.Context, req provider.Config
 	// type Configure methods.
 	resp.DataSourceData = client
 	resp.ResourceData = client
+
+	tflog.Info(ctx, "Confgured Aireplane.dev client", map[string]any{"success": true})
 }
 
 // DataSources defines the data sources implemented in the provider.
@@ -176,5 +185,7 @@ func (p *airplanedevProvider) DataSources(_ context.Context) []func() datasource
 
 // Resources defines the resources implemented in the provider.
 func (p *airplanedevProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewTaskResource,
+	}
 }
